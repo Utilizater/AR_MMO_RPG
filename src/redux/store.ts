@@ -2,12 +2,14 @@ import { configureStore } from '@reduxjs/toolkit';
 import characterReducer from './slices/characterSlice';
 import inventoryReducer from './slices/inventorySlice';
 import combatReducer from './slices/combatSlice';
+import mapReducer from './slices/mapSlice';
 
 export const store = configureStore({
   reducer: {
     character: characterReducer,
     inventory: inventoryReducer,
     combat: combatReducer,
+    map: mapReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
