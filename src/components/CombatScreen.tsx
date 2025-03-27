@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  Image,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../redux/store';
@@ -272,6 +273,13 @@ const CombatScreen: React.FC = () => {
 
         <View style={styles.combatantCard}>
           <Text style={styles.combatantName}>{combat.currentMonster.name}</Text>
+          <View style={styles.monsterImageContainer}>
+            <Image
+              source={combat.currentMonster.image}
+              style={styles.monsterImage}
+              resizeMode='contain'
+            />
+          </View>
           <View style={styles.healthBarContainer}>
             <View
               style={[
@@ -384,6 +392,16 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 10,
     textAlign: 'center',
+  },
+  monsterImageContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    height: 80,
+  },
+  monsterImage: {
+    width: '100%',
+    height: '100%',
   },
   healthBarContainer: {
     height: 10,
