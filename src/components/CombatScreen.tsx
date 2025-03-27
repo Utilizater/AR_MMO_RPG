@@ -22,6 +22,10 @@ import {
 import { gainExperience } from '../redux/slices/characterSlice';
 import { addItem, addGold } from '../redux/slices/inventorySlice';
 import { generateLoot } from '../models/Item';
+import {
+  deserializeMonster,
+  deserializeCharacter,
+} from '../utils/serializationUtils';
 
 // Mock LLM parsing function
 const parseCombatAction = (
@@ -159,10 +163,13 @@ const CombatScreen: React.FC = () => {
     // Reset error
     setActionError(null);
 
+    // Deserialize the character to access methods
+    const deserializedCharacter = deserializeCharacter(character);
+
     // Parse the action
     const result = parseCombatAction(
       actionInput,
-      character,
+      deserializedCharacter,
       combat.currentMonster
     );
 
@@ -183,8 +190,8 @@ const CombatScreen: React.FC = () => {
       result.action === 'ability' &&
       result.abilityIndex !== undefined
     ) {
-      const ability = character.abilities[result.abilityIndex];
-      const abilityResult = character.useAbility(
+      const ability = deserializedCharacter.abilities[result.abilityIndex];
+      const abilityResult = deserializedCharacter.useAbility(
         result.abilityIndex,
         combat.currentMonster
       );
@@ -209,8 +216,11 @@ const CombatScreen: React.FC = () => {
     // Monster's turn
     setTimeout(() => {
       if (combat.monsterHealth > 0) {
-        const monster = combat.currentMonster;
-        if (!monster) return;
+        const monsterData = combat.currentMonster;
+        if (!monsterData) return;
+
+        // Create a monster-like object with methods
+        const monster = deserializeMonster(monsterData);
 
         // Choose an attack
         const attack = monster.chooseAttack();
