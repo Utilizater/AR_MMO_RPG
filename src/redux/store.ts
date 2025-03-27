@@ -9,6 +9,22 @@ export const store = configureStore({
     inventory: inventoryReducer,
     combat: combatReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore these action types
+        ignoredActions: ['combat/startCombat', 'character/createCharacter'],
+        // Ignore these field paths in all actions
+        ignoredActionPaths: [
+          'payload.monster',
+          'meta.arg.monster',
+          'payload.character',
+          'meta.arg.character',
+        ],
+        // Ignore these paths in the state
+        ignoredPaths: ['combat.currentMonster', 'character.character'],
+      },
+    }),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

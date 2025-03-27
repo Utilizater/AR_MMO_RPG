@@ -1,10 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Monster } from '../../models/Monster';
 import { LootTable, generateLoot } from '../../models/Item';
+// We're using serialized monster objects in the state
+type SerializedMonster = Omit<Monster, 'chooseAttack' | 'updateCooldowns'>;
 
 interface CombatState {
   inCombat: boolean;
-  currentMonster: Monster | null;
+  currentMonster: SerializedMonster | null;
   playerHealth: number;
   playerMana: number;
   monsterHealth: number;
@@ -41,7 +43,7 @@ export const combatSlice = createSlice({
     startCombat: (
       state,
       action: PayloadAction<{
-        monster: Monster;
+        monster: SerializedMonster;
         playerHealth: number;
         playerMana: number;
       }>
