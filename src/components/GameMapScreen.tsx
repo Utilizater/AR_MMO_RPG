@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Image,
+} from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../redux/store';
 import { startCombat } from '../redux/slices/combatSlice';
@@ -98,6 +105,7 @@ const GameMapScreen: React.FC = () => {
           goldRange: { min: 5, max: 20 },
         },
         50 + Math.floor(Math.random() * 30)
+        // The image will be automatically set based on monster type in the constructor
       );
 
       points.push({
@@ -200,6 +208,15 @@ const GameMapScreen: React.FC = () => {
                 : styles.questCard,
             ]}
             onPress={() => handlePointInteraction(point)}>
+            {point.type === 'monster' && (
+              <View style={styles.monsterImageContainer}>
+                <Image
+                  source={point.data.image}
+                  style={styles.monsterImage}
+                  resizeMode='contain'
+                />
+              </View>
+            )}
             <Text style={styles.pointName}>{point.name}</Text>
             <Text style={styles.pointType}>{point.type.toUpperCase()}</Text>
             <Text style={styles.pointDistance}>
@@ -288,6 +305,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#e3f2fd',
     borderLeftWidth: 5,
     borderLeftColor: '#2196f3',
+  },
+  monsterImageContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    height: 60,
+  },
+  monsterImage: {
+    width: 60,
+    height: 60,
   },
   pointName: {
     fontSize: 16,
