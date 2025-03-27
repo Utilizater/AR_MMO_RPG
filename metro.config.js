@@ -16,4 +16,7 @@ config.watcher = {
   },
 };
 
+// Add support for hermes
+config.resolver.sourceExts = [...config.resolver.sourceExts, 'cjs'];
+
 module.exports = config;
