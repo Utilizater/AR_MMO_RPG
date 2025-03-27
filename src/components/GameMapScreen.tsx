@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  Platform,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../redux/store';
@@ -17,8 +18,10 @@ import {
   MonsterDifficulty,
 } from '../models/Monster';
 import { generateLoot } from '../models/Item';
+import MapView, { Marker } from 'react-native-maps';
+import * as Location from 'expo-location';
 
-// Mock location data for AR integration
+// Location data for AR integration
 interface LocationPoint {
   id: string;
   name: string;
@@ -35,18 +38,67 @@ const GameMapScreen: React.FC = () => {
   );
   const [nearbyPoints, setNearbyPoints] = useState<LocationPoint[]>([]);
   const [userLocation, setUserLocation] = useState({
-    latitude: 0,
-    longitude: 0,
+    latitude: 37.7749, // Default to San Francisco
+    longitude: -122.4194,
   });
+  const [mapRegion, setMapRegion] = useState({
+    latitude: 37.7749,
+    longitude: -122.4194,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  });
+  const [locationPermission, setLocationPermission] = useState(false);
 
-  // Mock function to get user's location
-  const getUserLocation = () => {
-    // In a real app, this would use Expo Location or similar
-    // For now, we'll just generate random coordinates
-    return {
-      latitude: 37.7749 + (Math.random() * 0.01 - 0.005),
-      longitude: -122.4194 + (Math.random() * 0.01 - 0.005),
-    };
+  // Request location permission
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(status === 'granted');
+      if (status !== 'granted') {
+        console.log('Location permission denied');
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  };
+
+  // Get user's location
+  const getUserLocation = async (): Promise<{
+    latitude: number;
+    longitude: number;
+  }> => {
+    if (locationPermission) {
+      try {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+
+        const { latitude, longitude } = location.coords;
+
+        // Update map region
+        setMapRegion({
+          latitude,
+          longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        });
+
+        return { latitude, longitude };
+      } catch (error) {
+        console.log('Error getting location:', error);
+        // Fallback to default location
+        return {
+          latitude: 37.7749 + (Math.random() * 0.01 - 0.005),
+          longitude: -122.4194 + (Math.random() * 0.01 - 0.005),
+        };
+      }
+    } else {
+      // Use mock location if permission not granted
+      return {
+        latitude: 37.7749 + (Math.random() * 0.01 - 0.005),
+        longitude: -122.4194 + (Math.random() * 0.01 - 0.005),
+      };
+    }
   };
 
   // Mock function to generate nearby points of interest
@@ -133,21 +185,27 @@ const GameMapScreen: React.FC = () => {
     return points;
   };
 
+  // Request location permission on component mount
+  useEffect(() => {
+    requestLocationPermission();
+  }, []);
+
   // Update location and nearby points periodically
   useEffect(() => {
-    const locationInterval = setInterval(() => {
-      const newLocation = getUserLocation();
+    const updateLocationAndPoints = async () => {
+      const newLocation = await getUserLocation();
       setUserLocation(newLocation);
       setNearbyPoints(generateNearbyPoints(newLocation));
-    }, 10000); // Update every 10 seconds
+    };
 
     // Initial update
-    const initialLocation = getUserLocation();
-    setUserLocation(initialLocation);
-    setNearbyPoints(generateNearbyPoints(initialLocation));
+    updateLocationAndPoints();
+
+    // Set up interval for periodic updates
+    const locationInterval = setInterval(updateLocationAndPoints, 10000); // Update every 10 seconds
 
     return () => clearInterval(locationInterval);
-  }, []);
+  }, [locationPermission]);
 
   // Handle interaction with a point on the map
   const handlePointInteraction = (point: LocationPoint) => {
@@ -186,8 +244,61 @@ const GameMapScreen: React.FC = () => {
       <Text style={styles.header}>Game Map</Text>
 
       <View style={styles.mapContainer}>
-        {/* This would be replaced with an actual AR map view */}
-        <Text style={styles.mapPlaceholder}>AR Map View</Text>
+        <MapView
+          style={styles.map}
+          region={mapRegion}
+          showsUserLocation={true}
+          showsMyLocationButton={true}>
+          {/* User's current location marker */}
+          <Marker
+            coordinate={{
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
+            }}
+            title='You'
+            description='Your current location'
+            pinColor='blue'
+          />
+
+          {/* Monster markers */}
+          {nearbyPoints
+            .filter((point) => point.type === 'monster')
+            .map((point) => (
+              <Marker
+                key={point.id}
+                coordinate={{
+                  latitude: point.latitude,
+                  longitude: point.longitude,
+                }}
+                title={point.name}
+                description={`${point.data.difficulty} ${point.data.type}`}
+                onPress={() => handlePointInteraction(point)}>
+                <Image
+                  source={point.data.image}
+                  style={styles.markerImage}
+                  resizeMode='contain'
+                />
+              </Marker>
+            ))}
+
+          {/* Treasure markers */}
+          {nearbyPoints
+            .filter((point) => point.type === 'treasure')
+            .map((point) => (
+              <Marker
+                key={point.id}
+                coordinate={{
+                  latitude: point.latitude,
+                  longitude: point.longitude,
+                }}
+                title={point.name}
+                description='Collect gold and items'
+                pinColor='gold'
+                onPress={() => handlePointInteraction(point)}
+              />
+            ))}
+        </MapView>
+
         <Text style={styles.locationText}>
           Your Location: {userLocation.latitude.toFixed(4)},{' '}
           {userLocation.longitude.toFixed(4)}
@@ -236,8 +347,8 @@ const GameMapScreen: React.FC = () => {
 
       <TouchableOpacity
         style={styles.refreshButton}
-        onPress={() => {
-          const newLocation = getUserLocation();
+        onPress={async () => {
+          const newLocation = await getUserLocation();
           setUserLocation(newLocation);
           setNearbyPoints(generateNearbyPoints(newLocation));
         }}>
@@ -261,16 +372,18 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   mapContainer: {
-    height: 200,
-    backgroundColor: '#e0e0e0',
+    height: 300,
     borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+    overflow: 'hidden',
     marginBottom: 20,
   },
-  mapPlaceholder: {
-    fontSize: 18,
-    color: '#666',
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  markerImage: {
+    width: 40,
+    height: 40,
   },
   locationText: {
     fontSize: 12,
