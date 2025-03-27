@@ -39,7 +39,7 @@ export const useLocation = () => {
     updateLocation();
 
     // Set up interval for periodic updates
-    const locationInterval = setInterval(updateLocation, 10000); // Update every 10 seconds
+    const locationInterval = setInterval(updateLocation, 60000); // Update every 10 seconds
 
     return () => clearInterval(locationInterval);
   }, [locationPermission]);
