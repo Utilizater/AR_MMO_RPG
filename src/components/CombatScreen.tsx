@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../redux/store';
+import { AppDispatch } from '../redux/store';
 import {
   endCombat,
   playerAttack,
@@ -21,6 +22,7 @@ import {
 } from '../redux/slices/combatSlice';
 import { gainExperience } from '../redux/slices/characterSlice';
 import { addItem, addGold } from '../redux/slices/inventorySlice';
+import { handleMonsterDefeat } from '../redux/slices/mapSlice';
 import { generateLoot } from '../models/Item';
 import {
   deserializeMonster,
@@ -92,7 +94,7 @@ const parseCombatAction = (
 };
 
 const CombatScreen: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const combat = useSelector((state: RootState) => state.combat);
   const character = useSelector(
     (state: RootState) => state.character.character
@@ -142,9 +144,13 @@ const CombatScreen: React.FC = () => {
       dispatch(addToCombatLog(`You found ${loot.items.length} item(s)!`));
     }
 
-    // End combat
+    // End combat and remove monster from map
     setTimeout(() => {
-      dispatch(endCombat());
+      if (combat.currentMonsterId) {
+        dispatch(handleMonsterDefeat(combat.currentMonsterId));
+      } else {
+        dispatch(endCombat({ monsterDefeated: true }));
+      }
     }, 2000);
   };
 
@@ -153,7 +159,7 @@ const CombatScreen: React.FC = () => {
 
     // End combat
     setTimeout(() => {
-      dispatch(endCombat());
+      dispatch(endCombat({}));
     }, 2000);
   };
 

@@ -7,6 +7,7 @@ type SerializedMonster = Omit<Monster, 'chooseAttack' | 'updateCooldowns'>;
 interface CombatState {
   inCombat: boolean;
   currentMonster: SerializedMonster | null;
+  currentMonsterId: string | null; // Store the ID to reference the map point
   playerHealth: number;
   playerMana: number;
   monsterHealth: number;
@@ -27,6 +28,7 @@ interface CombatState {
 const initialState: CombatState = {
   inCombat: false,
   currentMonster: null,
+  currentMonsterId: null,
   playerHealth: 0,
   playerMana: 0,
   monsterHealth: 0,
@@ -44,14 +46,16 @@ export const combatSlice = createSlice({
       state,
       action: PayloadAction<{
         monster: SerializedMonster;
+        monsterId: string;
         playerHealth: number;
         playerMana: number;
       }>
     ) => {
-      const { monster, playerHealth, playerMana } = action.payload;
+      const { monster, monsterId, playerHealth, playerMana } = action.payload;
 
       state.inCombat = true;
       state.currentMonster = monster;
+      state.currentMonsterId = monsterId;
       state.playerHealth = playerHealth;
       state.playerMana = playerMana;
       state.monsterHealth = monster.stats.health;
@@ -61,9 +65,15 @@ export const combatSlice = createSlice({
       state.monsterEffects = [];
     },
 
-    endCombat: (state) => {
+    endCombat: (
+      state,
+      action: PayloadAction<{ monsterDefeated?: boolean } | undefined>
+    ) => {
+      const monsterDefeated = action.payload?.monsterDefeated || false;
+
       state.inCombat = false;
       state.currentMonster = null;
+      state.currentMonsterId = null;
       state.combatLog.push('Combat ended.');
     },
 
