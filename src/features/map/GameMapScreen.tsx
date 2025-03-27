@@ -8,6 +8,7 @@ import { useLocation } from './hooks/useLocation';
 import { usePointsOfInterest } from './hooks/usePointsOfInterest';
 import GameMap from './components/GameMap';
 import PointsOfInterestList from './components/PointsOfInterestList';
+import { serializeMonster } from '../../utils/serializationUtils';
 
 /**
  * Main screen component for the game map
@@ -33,10 +34,10 @@ const GameMapScreen: React.FC = () => {
 
     switch (point.type) {
       case 'monster':
-        // Start combat with the monster
+        // Start combat with the monster - serialize the monster object first
         dispatch(
           startCombat({
-            monster: point.data,
+            monster: serializeMonster(point.data),
             playerHealth: character.stats.health,
             playerMana: character.stats.mana,
           })

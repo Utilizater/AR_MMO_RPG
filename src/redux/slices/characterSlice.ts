@@ -1,8 +1,18 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Profession, Race, Character } from '../../models/Character';
+import {
+  serializeCharacter,
+  deserializeCharacter,
+} from '../../utils/serializationUtils';
+
+// Define a type for serialized character
+type SerializedCharacter = Omit<
+  Character,
+  'gainExperience' | 'levelUp' | 'useAbility' | 'updateCooldowns'
+>;
 
 interface CharacterState {
-  character: Character | null;
+  character: SerializedCharacter | null;
   isCreating: boolean;
 }
 
@@ -27,17 +37,25 @@ export const characterSlice = createSlice({
       }>
     ) => {
       const { profession, race, name } = action.payload;
-      state.character = new Character(name, profession, race);
+      // Create a character instance, then serialize it for Redux
+      const character = new Character(name, profession, race);
+      state.character = serializeCharacter(character);
       state.isCreating = false;
     },
     levelUp: (state) => {
       if (state.character) {
-        state.character.levelUp();
+        // Deserialize, update, then serialize back
+        const character = deserializeCharacter(state.character);
+        character.levelUp();
+        state.character = serializeCharacter(character);
       }
     },
     gainExperience: (state, action: PayloadAction<number>) => {
       if (state.character) {
-        state.character.gainExperience(action.payload);
+        // Deserialize, update, then serialize back
+        const character = deserializeCharacter(state.character);
+        character.gainExperience(action.payload);
+        state.character = serializeCharacter(character);
       }
     },
   },
