@@ -63,9 +63,13 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
             }}
             title={point.name}
             description='Collect gold and items'
-            pinColor='gold'
-            onPress={() => onMarkerPress(point)}
-          />
+            onPress={() => onMarkerPress(point)}>
+            <Image
+              source={point.data.image}
+              style={styles.markerImage}
+              resizeMode='contain'
+            />
+          </Marker>
         ))}
 
       {/* Quest markers - can be expanded in the future */}

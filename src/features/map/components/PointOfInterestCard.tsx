@@ -31,7 +31,7 @@ const PointOfInterestCard: React.FC<PointOfInterestCardProps> = ({
           : styles.questCard,
       ]}
       onPress={() => onPress(point)}>
-      {point.type === 'monster' && (
+      {(point.type === 'monster' || point.type === 'treasure') && (
         <View style={styles.monsterImageContainer}>
           <Image
             source={point.data.image}

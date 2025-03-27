@@ -43,6 +43,7 @@ export const generateNearbyPoints = (
     type: 'treasure',
     data: {
       gold: Math.floor(Math.random() * 50) + 10,
+      image: require('../../../../assets/treasure.png'),
     },
   });
 
