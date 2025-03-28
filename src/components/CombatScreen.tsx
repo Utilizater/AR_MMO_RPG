@@ -7,6 +7,7 @@ import {
   ScrollView,
   TextInput,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../redux/store';
@@ -28,70 +29,7 @@ import {
   deserializeMonster,
   deserializeCharacter,
 } from '../utils/serializationUtils';
-
-// Mock LLM parsing function
-const parseCombatAction = (
-  input: string,
-  character: any,
-  monster: any
-): {
-  valid: boolean;
-  action?: string;
-  damage?: number;
-  abilityIndex?: number;
-  message?: string;
-} => {
-  // In a real app, this would call an LLM API
-  // For now, we'll use simple keyword matching
-
-  const inputLower = input.toLowerCase();
-
-  // Check for ability usage
-  for (let i = 0; i < character.abilities.length; i++) {
-    const ability = character.abilities[i];
-    if (inputLower.includes(ability.name.toLowerCase())) {
-      if (ability.currentCooldown > 0) {
-        return {
-          valid: false,
-          message: `${ability.name} is on cooldown for ${ability.currentCooldown} more turns.`,
-        };
-      }
-
-      return {
-        valid: true,
-        action: 'ability',
-        abilityIndex: i,
-      };
-    }
-  }
-
-  // Check for basic attacks
-  if (
-    inputLower.includes('attack') ||
-    inputLower.includes('hit') ||
-    inputLower.includes('strike') ||
-    inputLower.includes('slash') ||
-    inputLower.includes('stab')
-  ) {
-    // Calculate damage based on character's strength
-    const damage = Math.floor(
-      character.stats.strength * (0.8 + Math.random() * 0.4)
-    );
-
-    return {
-      valid: true,
-      action: 'attack',
-      damage,
-    };
-  }
-
-  // If no valid action found
-  return {
-    valid: false,
-    message:
-      "I don't understand that action. Try attacking or using an ability.",
-  };
-};
+import { evaluateCombatAction } from '../services/openAiService';
 
 const CombatScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -99,9 +37,14 @@ const CombatScreen: React.FC = () => {
   const character = useSelector(
     (state: RootState) => state.character.character
   );
+  const inventory = useSelector((state: RootState) => state.inventory.items);
+  const equippedItems = useSelector(
+    (state: RootState) => state.inventory.equippedItems
+  );
 
   const [actionInput, setActionInput] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Check if combat is over
   useEffect(() => {
@@ -163,87 +106,110 @@ const CombatScreen: React.FC = () => {
     }, 2000);
   };
 
-  const handleActionSubmit = () => {
+  const handleActionSubmit = async () => {
     if (!character || !combat.currentMonster || !combat.inCombat) return;
+    if (isProcessing) return; // Prevent multiple submissions
 
-    // Reset error
+    // Reset error and set processing state
     setActionError(null);
+    setIsProcessing(true);
 
-    // Deserialize the character to access methods
-    const deserializedCharacter = deserializeCharacter(character);
+    try {
+      // Deserialize the character to access methods
+      const deserializedCharacter = deserializeCharacter(character);
 
-    // Parse the action
-    const result = parseCombatAction(
-      actionInput,
-      deserializedCharacter,
-      combat.currentMonster
-    );
+      // Get all items (inventory + equipped)
+      const allItems = [...inventory];
+      Object.values(equippedItems).forEach((item) => {
+        if (item) allItems.push(item);
+      });
 
-    if (!result.valid) {
-      setActionError(result.message || 'Invalid action');
-      return;
-    }
-
-    // Handle the action
-    if (result.action === 'attack') {
-      dispatch(
-        playerAttack({
-          damage: result.damage || 0,
-          description: actionInput,
-        })
-      );
-    } else if (
-      result.action === 'ability' &&
-      result.abilityIndex !== undefined
-    ) {
-      const ability = deserializedCharacter.abilities[result.abilityIndex];
-      const abilityResult = deserializedCharacter.useAbility(
-        result.abilityIndex,
-        combat.currentMonster
+      // Evaluate the action using OpenAI
+      const result = await evaluateCombatAction(
+        actionInput,
+        deserializedCharacter,
+        combat.currentMonster,
+        allItems
       );
 
-      if (abilityResult.success) {
-        dispatch(
-          useAbility({
-            manaCost: 10, // This would be defined in the ability
-            effect: abilityResult.result,
-            description: ability.name,
-          })
-        );
-      } else {
-        setActionError(abilityResult.message);
+      if (!result.valid) {
+        setActionError(result.message || 'Invalid action');
+        setIsProcessing(false);
         return;
       }
-    }
 
-    // Clear input
-    setActionInput('');
+      // Add reasoning to combat log if available
+      if (result.reasoning) {
+        dispatch(addToCombatLog(`AI Evaluation: ${result.reasoning}`));
+      }
 
-    // Monster's turn
-    setTimeout(() => {
-      if (combat.monsterHealth > 0) {
-        const monsterData = combat.currentMonster;
-        if (!monsterData) return;
-
-        // Create a monster-like object with methods
-        const monster = deserializeMonster(monsterData);
-
-        // Choose an attack
-        const attack = monster.chooseAttack();
-
-        // Apply attack
+      // Handle the action
+      if (result.action === 'attack') {
         dispatch(
-          monsterAttack({
-            damage: attack.damage,
-            description: attack.description,
+          playerAttack({
+            damage: result.damage || 0,
+            description: actionInput,
           })
         );
+      } else if (
+        result.action === 'ability' &&
+        result.abilityIndex !== undefined
+      ) {
+        const ability = deserializedCharacter.abilities[result.abilityIndex];
+        const abilityResult = deserializedCharacter.useAbility(
+          result.abilityIndex,
+          combat.currentMonster
+        );
 
-        // Update cooldowns and apply effects
-        dispatch(applyEffects());
-        dispatch(nextTurn());
+        if (abilityResult.success) {
+          dispatch(
+            useAbility({
+              manaCost: 10, // This would be defined in the ability
+              effect: abilityResult.result,
+              description: ability.name,
+            })
+          );
+        } else {
+          setActionError(abilityResult.message);
+          setIsProcessing(false);
+          return;
+        }
       }
-    }, 1000);
+
+      // Clear input
+      setActionInput('');
+
+      // Monster's turn
+      setTimeout(() => {
+        if (combat.monsterHealth > 0) {
+          const monsterData = combat.currentMonster;
+          if (!monsterData) return;
+
+          // Create a monster-like object with methods
+          const monster = deserializeMonster(monsterData);
+
+          // Choose an attack
+          const attack = monster.chooseAttack();
+
+          // Apply attack
+          dispatch(
+            monsterAttack({
+              damage: attack.damage,
+              description: attack.description,
+            })
+          );
+
+          // Update cooldowns and apply effects
+          dispatch(applyEffects());
+          dispatch(nextTurn());
+        }
+        setIsProcessing(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error processing action:', error);
+      setActionError('Error processing your action. Please try again.');
+      setIsProcessing(false);
+    }
   };
 
   if (!combat.inCombat || !combat.currentMonster || !character) {
@@ -327,7 +293,7 @@ const CombatScreen: React.FC = () => {
               onPress={() => {
                 setActionInput(`Use ${ability.name}`);
               }}
-              disabled={ability.currentCooldown > 0}>
+              disabled={ability.currentCooldown > 0 || isProcessing}>
               <Text style={styles.abilityName}>{ability.name}</Text>
               {ability.currentCooldown > 0 && (
                 <Text style={styles.cooldownText}>
@@ -357,12 +323,20 @@ const CombatScreen: React.FC = () => {
           onChangeText={setActionInput}
           placeholder='Describe your action...'
           placeholderTextColor='#999'
+          editable={!isProcessing}
         />
         <TouchableOpacity
-          style={styles.actionButton}
+          style={[
+            styles.actionButton,
+            isProcessing && styles.actionButtonDisabled,
+          ]}
           onPress={handleActionSubmit}
-          disabled={!actionInput.trim()}>
-          <Text style={styles.actionButtonText}>Act</Text>
+          disabled={!actionInput.trim() || isProcessing}>
+          {isProcessing ? (
+            <ActivityIndicator size='small' color='#fff' />
+          ) : (
+            <Text style={styles.actionButtonText}>Act</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -518,6 +492,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: 60,
+  },
+  actionButtonDisabled: {
+    backgroundColor: '#a0b4e8',
   },
   actionButtonText: {
     color: '#fff',
