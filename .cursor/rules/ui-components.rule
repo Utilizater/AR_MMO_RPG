@@ -1,0 +1,26 @@
+# UI Components Rules
+
+## Core Screens
+- Main Screen: Navigation and transitions
+- Character Creation: Profession and stats
+- Game Map: AR view and markers
+- Combat: Health bars and actions
+- Inventory: Items and equipment
+
+## Common Components
+- Health/Mana Bars
+- Action Buttons
+- Status Cards
+- Scrollable Lists
+
+## Styling
+- Use StyleSheet.create
+- Consistent theme
+- Mobile-first approach
+- Proper spacing
+
+## Accessibility
+- Readable text
+- Touch targets
+- Clear feedback
+- Error states

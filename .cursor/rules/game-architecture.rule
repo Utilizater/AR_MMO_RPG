@@ -1,0 +1,31 @@
+# Game Architecture Rules
+
+## Core Principles
+- Redux for state management
+- TypeScript for type safety
+- Component-based architecture
+- Separation of concerns
+
+## Directory Structure
+src/
+  ├── components/    # UI components
+  ├── features/      # Game features
+  ├── models/        # Game entities
+  ├── redux/         # State management
+  ├── services/      # External services
+  └── utils/         # Helper functions
+
+## State Management
+- Use Redux slices for:
+  - Character state
+  - Combat state
+  - Inventory state
+  - Map state
+- Ensure state serialization
+- Handle circular references
+
+## Code Quality
+- Use TypeScript strictly
+- Implement error boundaries
+- Log errors appropriately
+- Keep components pure
