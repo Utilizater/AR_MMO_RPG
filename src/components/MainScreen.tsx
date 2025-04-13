@@ -1,25 +1,25 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useSelector } from 'react-redux';
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../redux/store';
+import { AppDispatch } from '../redux/store';
 import CharacterCreationScreen from './CharacterCreationScreen';
 import GameMapScreen from './GameMapScreen';
 import InventoryScreen from './InventoryScreen';
 import CombatScreen from './CombatScreen';
 import CharacterInfoScreen from './CharacterInfoScreen';
-
-// Main screen types
-enum ScreenType {
-  CHARACTER_CREATION = 'CHARACTER_CREATION',
-  GAME_MAP = 'GAME_MAP',
-  INVENTORY = 'INVENTORY',
-  COMBAT = 'COMBAT',
-  CHARACTER_INFO = 'CHARACTER_INFO',
-}
+import { ScreenType, setCurrentScreen } from '../redux/slices/navigationSlice';
 
 const MainScreen: React.FC = () => {
-  const [currentScreen, setCurrentScreen] = useState<ScreenType>(
-    ScreenType.CHARACTER_CREATION
+  const dispatch = useDispatch<AppDispatch>();
+  const currentScreen = useSelector(
+    (state: RootState) => state.navigation.currentScreen
   );
   const character = useSelector(
     (state: RootState) => state.character.character
@@ -29,20 +29,26 @@ const MainScreen: React.FC = () => {
   // Automatically switch to combat screen when in combat
   React.useEffect(() => {
     if (inCombat) {
-      setCurrentScreen(ScreenType.COMBAT);
+      dispatch(setCurrentScreen(ScreenType.COMBAT));
     } else if (currentScreen === ScreenType.COMBAT && !inCombat) {
-      setCurrentScreen(ScreenType.GAME_MAP);
+      dispatch(setCurrentScreen(ScreenType.GAME_MAP));
     }
-  }, [inCombat, currentScreen]);
+  }, [inCombat, currentScreen, dispatch]);
 
   // Automatically switch to character creation if no character exists
   React.useEffect(() => {
     if (!character && currentScreen !== ScreenType.CHARACTER_CREATION) {
-      setCurrentScreen(ScreenType.CHARACTER_CREATION);
+      dispatch(setCurrentScreen(ScreenType.CHARACTER_CREATION));
     } else if (character && currentScreen === ScreenType.CHARACTER_CREATION) {
-      setCurrentScreen(ScreenType.GAME_MAP);
+      dispatch(setCurrentScreen(ScreenType.GAME_MAP));
     }
-  }, [character, currentScreen]);
+  }, [character, currentScreen, dispatch]);
+
+  // Handle navigation button press
+  const handleNavigationPress = (screen: ScreenType) => {
+    if (currentScreen === screen) return;
+    dispatch(setCurrentScreen(screen));
+  };
 
   // Render the appropriate screen based on the current screen state
   const renderScreen = () => {
@@ -67,26 +73,78 @@ const MainScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {renderScreen()}
+      <View style={styles.screenContainer}>{renderScreen()}</View>
 
       {showNavigation && (
         <View style={styles.navigationBar}>
           <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => setCurrentScreen(ScreenType.GAME_MAP)}>
-            <Text style={styles.navButtonText}>Map</Text>
+            style={[
+              styles.navButton,
+              currentScreen === ScreenType.GAME_MAP && styles.activeNavButton,
+            ]}
+            onPress={() => handleNavigationPress(ScreenType.GAME_MAP)}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <View style={styles.buttonContent}>
+              <Text
+                style={[
+                  styles.navButtonText,
+                  currentScreen === ScreenType.GAME_MAP &&
+                    styles.activeNavButtonText,
+                ]}>
+                Map
+              </Text>
+              {currentScreen === ScreenType.GAME_MAP && (
+                <View style={styles.activeIndicator} />
+              )}
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => setCurrentScreen(ScreenType.INVENTORY)}>
-            <Text style={styles.navButtonText}>Inventory</Text>
+            style={[
+              styles.navButton,
+              currentScreen === ScreenType.INVENTORY && styles.activeNavButton,
+            ]}
+            onPress={() => handleNavigationPress(ScreenType.INVENTORY)}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <View style={styles.buttonContent}>
+              <Text
+                style={[
+                  styles.navButtonText,
+                  currentScreen === ScreenType.INVENTORY &&
+                    styles.activeNavButtonText,
+                ]}>
+                Inventory
+              </Text>
+              {currentScreen === ScreenType.INVENTORY && (
+                <View style={styles.activeIndicator} />
+              )}
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => setCurrentScreen(ScreenType.CHARACTER_INFO)}>
-            <Text style={styles.navButtonText}>Character</Text>
+            style={[
+              styles.navButton,
+              currentScreen === ScreenType.CHARACTER_INFO &&
+                styles.activeNavButton,
+            ]}
+            onPress={() => handleNavigationPress(ScreenType.CHARACTER_INFO)}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <View style={styles.buttonContent}>
+              <Text
+                style={[
+                  styles.navButtonText,
+                  currentScreen === ScreenType.CHARACTER_INFO &&
+                    styles.activeNavButtonText,
+                ]}>
+                Character
+              </Text>
+              {currentScreen === ScreenType.CHARACTER_INFO && (
+                <View style={styles.activeIndicator} />
+              )}
+            </View>
           </TouchableOpacity>
         </View>
       )}
@@ -99,6 +157,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
+  screenContainer: {
+    flex: 1,
+    paddingBottom: 60,
+  },
   navigationBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -109,17 +171,48 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    borderTopWidth: 1,
+    borderTopColor: '#444',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
   },
   navButton: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
+    paddingHorizontal: 10,
+  },
+  buttonContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeNavButton: {
+    backgroundColor: '#444',
   },
   navButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  activeNavButtonText: {
+    color: '#4a80f5',
+  },
+  activeIndicator: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#4a80f5',
+    marginTop: 4,
   },
 });
 
