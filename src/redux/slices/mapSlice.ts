@@ -12,6 +12,7 @@ import { serializeMonster } from '../../utils/serializationUtils';
 import { Monster } from '../../models/Monster';
 import { RootState } from '../store';
 import { endCombat } from './combatSlice';
+import { addGold } from './inventorySlice';
 
 // Thunk to handle monster defeat in combat
 export const handleMonsterDefeat = createAsyncThunk(
@@ -41,8 +42,12 @@ export const handleTreasureCollection = createAsyncThunk(
       // Remove the treasure from the map
       dispatch(collectTreasure(treasureId));
 
-      // Return the treasure data for further processing (e.g., adding gold to inventory)
-      return treasure.data as TreasureData;
+      // Add gold to inventory
+      const treasureData = treasure.data as TreasureData;
+      dispatch(addGold(treasureData.gold));
+
+      // Return the treasure data for further processing
+      return treasureData;
     }
 
     return null;

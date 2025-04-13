@@ -19,15 +19,6 @@ import {
 import { Item, ItemType, EquipmentSlot } from '../models/Item';
 
 const InventoryScreen: React.FC = () => {
-  console.log('InventoryScreen: Component rendering');
-
-  useEffect(() => {
-    console.log('InventoryScreen: Component mounted');
-    return () => {
-      console.log('InventoryScreen: Component unmounted');
-    };
-  }, []);
-
   const dispatch = useDispatch();
   const inventory = useSelector((state: RootState) => state.inventory);
   const character = useSelector(
@@ -300,7 +291,6 @@ const InventoryScreen: React.FC = () => {
             activeTab === 'inventory' ? styles.activeTab : null,
           ]}
           onPress={() => {
-            console.log('I click inventory');
             setActiveTab('inventory');
           }}>
           <Text
