@@ -5,6 +5,8 @@ import {
   getUserLocation,
   createMapRegion,
 } from '../services/locationService';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 
 /**
  * Custom hook for managing location-related state and logic
@@ -24,6 +26,11 @@ export const useLocation = () => {
   });
   const [zoomLevel, setZoomLevel] = useState(0.005);
 
+  // Get current screen from Redux store
+  const currentScreen = useSelector(
+    (state: RootState) => state.navigation.currentScreen
+  );
+
   // Request location permission on mount
   useEffect(() => {
     const getPermission = async () => {
@@ -39,7 +46,7 @@ export const useLocation = () => {
     updateLocation();
 
     // Set up interval for periodic updates
-    const locationInterval = setInterval(updateLocation, 60000); // Update every 10 seconds
+    const locationInterval = setInterval(updateLocation, 60000); // Update every 60 seconds
 
     return () => clearInterval(locationInterval);
   }, [locationPermission]);
@@ -49,11 +56,13 @@ export const useLocation = () => {
     const newLocation = await getUserLocation(locationPermission);
     setUserLocation(newLocation);
 
-    // Update map region with current zoom level
-    setMapRegion(createMapRegion(newLocation, zoomLevel));
+    // Only update map region if we're on the map screen
+    if (currentScreen === 'GAME_MAP') {
+      setMapRegion(createMapRegion(newLocation, zoomLevel));
+    }
 
     return newLocation;
-  }, [locationPermission, zoomLevel]);
+  }, [locationPermission, zoomLevel, currentScreen]);
 
   // Zoom in function
   const zoomIn = useCallback(() => {

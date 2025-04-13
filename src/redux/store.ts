@@ -3,6 +3,7 @@ import characterReducer from './slices/characterSlice';
 import inventoryReducer from './slices/inventorySlice';
 import combatReducer from './slices/combatSlice';
 import mapReducer from './slices/mapSlice';
+import navigationReducer from './slices/navigationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     inventory: inventoryReducer,
     combat: combatReducer,
     map: mapReducer,
+    navigation: navigationReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

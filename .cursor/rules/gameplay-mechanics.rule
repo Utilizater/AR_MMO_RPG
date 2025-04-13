@@ -1,0 +1,28 @@
+# Gameplay Mechanics Rules
+
+## Combat System
+- Turn-based combat
+- Text-based actions via OpenAI
+- Monster AI with cooldowns
+- Status effects and buffs
+
+## Character System
+- Profession-based abilities
+- Experience and leveling
+- Stat progression
+- Customization options
+
+## Ability System
+- Cooldown management
+- Mana cost system
+- Effect types:
+  - Damage
+  - Healing
+  - Status effects
+  - Buffs/debuffs
+
+## Map System
+- AR-based location tracking
+- Monster spawns
+- Treasure locations
+- Distance calculations

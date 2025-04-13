@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -290,7 +290,9 @@ const InventoryScreen: React.FC = () => {
             styles.tab,
             activeTab === 'inventory' ? styles.activeTab : null,
           ]}
-          onPress={() => setActiveTab('inventory')}>
+          onPress={() => {
+            setActiveTab('inventory');
+          }}>
           <Text
             style={[
               styles.tabText,
