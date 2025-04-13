@@ -1,21 +1,20 @@
 // Define item types
 export enum ItemType {
-  EQUIPMENT = 'Equipment',
-  CONSUMABLE = 'Consumable',
-  QUEST = 'Quest',
-  MATERIAL = 'Material',
+  EQUIPMENT = 'EQUIPMENT',
+  CONSUMABLE = 'CONSUMABLE',
+  QUEST = 'QUEST',
 }
 
 // Define equipment slots
 export enum EquipmentSlot {
-  HEAD = 'Head',
-  CHEST = 'Chest',
-  LEGS = 'Legs',
-  FEET = 'Feet',
-  MAIN_HAND = 'MainHand',
-  OFF_HAND = 'OffHand',
-  NECK = 'Neck',
-  RING = 'Ring',
+  HEAD = 'HEAD',
+  CHEST = 'CHEST',
+  LEGS = 'LEGS',
+  FEET = 'FEET',
+  MAIN_HAND = 'MAIN_HAND',
+  OFF_HAND = 'OFF_HAND',
+  NECK = 'NECK',
+  RING = 'RING',
 }
 
 // Define item rarity
@@ -50,11 +49,14 @@ export interface Item {
   name: string;
   description: string;
   type: ItemType;
-  rarity: ItemRarity;
-  value: number; // Gold value
+  value: number;
+  imageUrl?: string;
+  equipmentSlot?: EquipmentSlot;
+  stats?: ItemStats;
+  rarity: 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
+  levelRequirement: number;
 
   // Equipment specific properties
-  equipmentSlot?: EquipmentSlot;
   statBonuses?: StatBonus;
 
   // Consumable specific properties
@@ -286,3 +288,12 @@ export const PREDEFINED_ITEMS = {
     { type: 'buff', value: 5, duration: 3 }
   ),
 };
+
+export interface ItemStats {
+  strength?: number;
+  dexterity?: number;
+  intelligence?: number;
+  vitality?: number;
+  defense?: number;
+  attack?: number;
+}

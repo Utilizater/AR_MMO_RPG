@@ -4,6 +4,25 @@ import inventoryReducer from './slices/inventorySlice';
 import combatReducer from './slices/combatSlice';
 import mapReducer from './slices/mapSlice';
 import navigationReducer from './slices/navigationSlice';
+import { initialItems } from '../data/items';
+
+const preloadedState = {
+  inventory: {
+    items: initialItems,
+    equippedItems: {
+      HEAD: null,
+      CHEST: null,
+      LEGS: null,
+      FEET: null,
+      MAIN_HAND: null,
+      OFF_HAND: null,
+      NECK: null,
+      RING: null,
+    },
+    gold: 100,
+    maxInventorySize: 20,
+  },
+};
 
 export const store = configureStore({
   reducer: {
@@ -29,6 +48,7 @@ export const store = configureStore({
         ignoredPaths: ['combat.currentMonster', 'character.character'],
       },
     }),
+  preloadedState,
 });
 
 export type RootState = ReturnType<typeof store.getState>;
