@@ -1,30 +1,30 @@
 // Define item types
 export enum ItemType {
-  EQUIPMENT = 'Equipment',
-  CONSUMABLE = 'Consumable',
-  QUEST = 'Quest',
-  MATERIAL = 'Material',
+  EQUIPMENT = 'EQUIPMENT',
+  CONSUMABLE = 'CONSUMABLE',
+  QUEST = 'QUEST',
+  MATERIAL = 'MATERIAL',
 }
 
 // Define equipment slots
 export enum EquipmentSlot {
-  HEAD = 'Head',
-  CHEST = 'Chest',
-  LEGS = 'Legs',
-  FEET = 'Feet',
-  MAIN_HAND = 'MainHand',
-  OFF_HAND = 'OffHand',
-  NECK = 'Neck',
-  RING = 'Ring',
+  HEAD = 'HEAD',
+  CHEST = 'CHEST',
+  LEGS = 'LEGS',
+  FEET = 'FEET',
+  MAIN_HAND = 'MAIN_HAND',
+  OFF_HAND = 'OFF_HAND',
+  NECK = 'NECK',
+  RING = 'RING',
 }
 
 // Define item rarity
 export enum ItemRarity {
-  COMMON = 'Common',
-  UNCOMMON = 'Uncommon',
-  RARE = 'Rare',
-  EPIC = 'Epic',
-  LEGENDARY = 'Legendary',
+  COMMON = 'COMMON',
+  UNCOMMON = 'UNCOMMON',
+  RARE = 'RARE',
+  EPIC = 'EPIC',
+  LEGENDARY = 'LEGENDARY',
 }
 
 // Define stat bonuses for equipment
@@ -50,11 +50,14 @@ export interface Item {
   name: string;
   description: string;
   type: ItemType;
+  value: number;
+  imageUrl?: string;
+  equipmentSlot?: EquipmentSlot;
+  stats?: ItemStats;
   rarity: ItemRarity;
-  value: number; // Gold value
+  levelRequirement: number;
 
   // Equipment specific properties
-  equipmentSlot?: EquipmentSlot;
   statBonuses?: StatBonus;
 
   // Consumable specific properties
@@ -86,6 +89,7 @@ export function createEquipment(
     value,
     equipmentSlot: slot,
     statBonuses,
+    levelRequirement: 1,
   };
 }
 
@@ -106,6 +110,7 @@ export function createConsumable(
     rarity,
     value,
     consumableEffect: effect,
+    levelRequirement: 1,
   };
 }
 
@@ -121,9 +126,10 @@ export function createQuestItem(
     name,
     description,
     type: ItemType.QUEST,
-    rarity: ItemRarity.COMMON, // Quest items are always common
-    value: 0, // Quest items have no gold value
+    rarity: ItemRarity.COMMON,
+    value: 0,
     questId,
+    levelRequirement: 1,
   };
 }
 
@@ -144,6 +150,7 @@ export function createMaterial(
     rarity,
     value,
     craftingUses,
+    levelRequirement: 1,
   };
 }
 
@@ -286,3 +293,13 @@ export const PREDEFINED_ITEMS = {
     { type: 'buff', value: 5, duration: 3 }
   ),
 };
+
+export interface ItemStats {
+  strength?: number;
+  dexterity?: number;
+  intelligence?: number;
+  vitality?: number;
+  defense?: number;
+  attack?: number;
+  magic?: number;
+}
