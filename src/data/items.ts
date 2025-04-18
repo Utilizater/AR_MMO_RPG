@@ -1,4 +1,4 @@
-import { Item, ItemType, EquipmentSlot } from '../models/Item';
+import { Item, ItemType, EquipmentSlot, ItemRarity } from '../models/Item';
 
 export const initialItems: Item[] = [
   {
@@ -13,7 +13,7 @@ export const initialItems: Item[] = [
       defense: 5,
       vitality: 2,
     },
-    rarity: 'COMMON',
+    rarity: ItemRarity.COMMON,
     levelRequirement: 1,
   },
   {
@@ -28,7 +28,7 @@ export const initialItems: Item[] = [
       defense: 8,
       dexterity: 3,
     },
-    rarity: 'COMMON',
+    rarity: ItemRarity.COMMON,
     levelRequirement: 1,
   },
   {
@@ -42,7 +42,7 @@ export const initialItems: Item[] = [
       attack: 12,
       strength: 5,
     },
-    rarity: 'UNCOMMON',
+    rarity: ItemRarity.UNCOMMON,
     levelRequirement: 2,
   },
   {
@@ -54,7 +54,7 @@ export const initialItems: Item[] = [
     stats: {
       vitality: 20,
     },
-    rarity: 'COMMON',
+    rarity: ItemRarity.COMMON,
     levelRequirement: 1,
   },
   {
@@ -68,7 +68,7 @@ export const initialItems: Item[] = [
       intelligence: 8,
       magic: 5,
     },
-    rarity: 'RARE',
+    rarity: ItemRarity.RARE,
     levelRequirement: 3,
   },
 ];

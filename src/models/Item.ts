@@ -3,6 +3,7 @@ export enum ItemType {
   EQUIPMENT = 'EQUIPMENT',
   CONSUMABLE = 'CONSUMABLE',
   QUEST = 'QUEST',
+  MATERIAL = 'MATERIAL',
 }
 
 // Define equipment slots
@@ -19,11 +20,11 @@ export enum EquipmentSlot {
 
 // Define item rarity
 export enum ItemRarity {
-  COMMON = 'Common',
-  UNCOMMON = 'Uncommon',
-  RARE = 'Rare',
-  EPIC = 'Epic',
-  LEGENDARY = 'Legendary',
+  COMMON = 'COMMON',
+  UNCOMMON = 'UNCOMMON',
+  RARE = 'RARE',
+  EPIC = 'EPIC',
+  LEGENDARY = 'LEGENDARY',
 }
 
 // Define stat bonuses for equipment
@@ -53,7 +54,7 @@ export interface Item {
   imageUrl?: string;
   equipmentSlot?: EquipmentSlot;
   stats?: ItemStats;
-  rarity: 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
+  rarity: ItemRarity;
   levelRequirement: number;
 
   // Equipment specific properties
@@ -88,6 +89,7 @@ export function createEquipment(
     value,
     equipmentSlot: slot,
     statBonuses,
+    levelRequirement: 1,
   };
 }
 
@@ -108,6 +110,7 @@ export function createConsumable(
     rarity,
     value,
     consumableEffect: effect,
+    levelRequirement: 1,
   };
 }
 
@@ -123,9 +126,10 @@ export function createQuestItem(
     name,
     description,
     type: ItemType.QUEST,
-    rarity: ItemRarity.COMMON, // Quest items are always common
-    value: 0, // Quest items have no gold value
+    rarity: ItemRarity.COMMON,
+    value: 0,
     questId,
+    levelRequirement: 1,
   };
 }
 
@@ -146,6 +150,7 @@ export function createMaterial(
     rarity,
     value,
     craftingUses,
+    levelRequirement: 1,
   };
 }
 
@@ -296,4 +301,5 @@ export interface ItemStats {
   vitality?: number;
   defense?: number;
   attack?: number;
+  magic?: number;
 }
